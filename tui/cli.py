@@ -5,7 +5,7 @@ from platform import system as detect_platform
 import pyfiglet
 
 from tui.utils import banner, clear_screen, get_choice, pause, separator, set_color
-from tui.modules import aws, docker, hadoop, linux, lvm, webserver
+from tui.modules import aws, docker, hadoop, kubernetes, linux, lvm, webserver
 
 
 def detect_os():
@@ -29,10 +29,11 @@ def main_menu():
         2) Hadoop
         3) AWS
         4) Docker
-        5) Webserver
-        6) Linux Partitions (LVM)
-        7) Linux Commands
-        8) Exit
+        5) Kubernetes
+        6) Webserver
+        7) Linux Partitions (LVM)
+        8) Linux Commands
+        9) Exit
         """)
         separator()
         set_color("white")
@@ -50,12 +51,14 @@ def main_menu():
         elif choice == 4:
             docker.run()
         elif choice == 5:
-            webserver.run()
+            kubernetes.run()
         elif choice == 6:
-            lvm.run()
+            webserver.run()
         elif choice == 7:
-            linux.run()
+            lvm.run()
         elif choice == 8:
+            linux.run()
+        elif choice == 9:
             print("Goodbye!")
             break
         else:

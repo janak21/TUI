@@ -8,6 +8,7 @@ TUI provides an interactive menu-driven interface to simplify installation, conf
 - **Hadoop** - Distributed computing cluster setup and operations
 - **AWS** - EC2 instances, S3 buckets, CloudFront distributions, and more
 - **Docker** - Image and container management
+- **Kubernetes** - Cluster management, deployments, pods, services, Helm
 - **Webserver** - Apache httpd configuration
 - **Linux Partitions** - LVM (Logical Volume Manager) operations
 - **Linux Commands** - Common system utilities
@@ -72,6 +73,7 @@ tui/
     ├── aws.py            # AWS services (EC2, S3, CloudFront)
     ├── docker.py         # Docker image & container management
     ├── hadoop.py         # Hadoop cluster setup & operations
+    ├── kubernetes.py     # Kubernetes cluster, deployments, Helm
     ├── linux.py          # Common Linux commands
     ├── lvm.py            # Logical Volume Management
     └── webserver.py      # Apache httpd management
@@ -109,6 +111,18 @@ sudo python -m tui
 - Search, pull, and manage images
 - Create, run, and manage containers
 - Delete images and containers
+
+**Kubernetes**
+- Install tools: kubectl, Minikube, kind, Helm
+- Minikube cluster lifecycle (start, stop, dashboard)
+- Node management (cordon, drain, resource usage)
+- Namespace management
+- Deployments (create, scale, rolling update, rollback)
+- Pods (logs, exec, shell, resource usage)
+- Services (expose, ClusterIP, NodePort, LoadBalancer)
+- ConfigMaps & Secrets management
+- Apply/delete YAML manifests with dry-run support
+- Helm: add repos, install/upgrade/uninstall charts
 
 **Webserver**
 - Install Apache httpd
