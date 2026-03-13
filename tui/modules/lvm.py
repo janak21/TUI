@@ -1,69 +1,63 @@
-"""Linux Partitions (LVM) module - physical volumes, volume groups, and logical volumes."""
+"""Linux Partitions (LVM) module — PV, VG, and LV management."""
 
 from tui.utils import (
-    banner, clear_screen, get_choice, pause, run_cmd_safe,
-    separator, set_color,
+    banner, clear_screen, error, get_choice, info, pause,
+    print_menu, run_cmd_safe, separator, success,
 )
 
 
-def _mount_volume():
+def _mount_volume() -> None:
     while True:
-        print(
-            "\n    Press 1: Mount on new folder"
-            "\n    Press 2: Mount on existing folder"
-            "\n    Press 3: Back\n"
-        )
+        print_menu("Mount Logical Volume", [
+            "Mount on new folder",
+            "Mount on existing folder",
+            "Back",
+        ])
         choice = get_choice()
         if choice is None:
             continue
         if choice in (1, 2):
-            set_color("white")
             if choice == 1:
-                mount_point = input("Enter new folder name: ")
+                mount_point = input("  New folder name: ")
                 run_cmd_safe(["mkdir", "-p", mount_point])
             else:
-                mount_point = input("Enter existing folder path: ")
-            vg_name = input("Enter volume group name: ")
-            lv_name = input("Enter logical volume name: ")
-            run_cmd_safe(["mount", f"/dev/{vg_name}/{lv_name}", mount_point])
+                mount_point = input("  Existing folder path: ")
+            vg = input("  Volume group name: ")
+            lv = input("  Logical volume name: ")
+            run_cmd_safe(["mount", f"/dev/{vg}/{lv}", mount_point])
             run_cmd_safe(["df", "-h"])
-            set_color("yellow")
-            print("\n\t\t\tLogical volume mounted successfully.")
+            success("Logical volume mounted.")
         elif choice == 3:
             break
         else:
-            print("Invalid option.")
+            error("Invalid option.")
         pause()
         clear_screen()
 
 
-def run():
-    """Main Linux Partitions menu."""
+def run() -> None:
     while True:
         clear_screen()
         banner("LVM")
-        set_color("green")
         separator()
-        print("""
-        Press 1 : Check available disks
-        Press 2 : Create physical volume
-        Press 3 : View all physical volumes
-        Press 4 : View physical volume by name
-        Press 5 : Create volume group
-        Press 6 : View all volume groups
-        Press 7 : View volume group by name
-        Press 8 : Create logical volume
-        Press 9 : View all logical volumes
-        Press 10: View logical volume by name
-        Press 11: Format logical volume
-        Press 12: Mount logical volume
-        Press 13: Extend logical volume
-        Press 14: Resize extended partition
-        Press 15: Extend volume group
-        Press 16: Return to main menu
-        """)
-        separator()
-        set_color("white")
+        print_menu("Linux Partitions", [
+            "Check available disks",
+            "Create physical volume",
+            "View all physical volumes",
+            "View physical volume by name",
+            "Create volume group",
+            "View all volume groups",
+            "View volume group by name",
+            "Create logical volume",
+            "View all logical volumes",
+            "View logical volume by name",
+            "Format logical volume",
+            "Mount logical volume",
+            "Extend logical volume",
+            "Resize extended partition",
+            "Extend volume group",
+            "Return to main menu",
+        ])
 
         choice = get_choice()
         if choice is None:
@@ -73,86 +67,80 @@ def run():
             run_cmd_safe(["fdisk", "-l"])
 
         elif choice == 2:
-            disk = input("Enter disk name: ")
+            disk = input("  Disk name: ")
             run_cmd_safe(["pvcreate", disk])
-            set_color("yellow")
-            print("\n\t\t\tPhysical volume created successfully.")
+            success("Physical volume created.")
 
         elif choice == 3:
             run_cmd_safe(["pvdisplay"])
 
         elif choice == 4:
-            disk = input("Enter disk name: ")
+            disk = input("  Disk name: ")
             run_cmd_safe(["pvdisplay", disk])
 
         elif choice == 5:
-            disk1 = input("Enter first PV name: ")
-            disk2 = input("Enter second PV name: ")
-            vg_name = input("Enter volume group name: ")
-            run_cmd_safe(["vgcreate", vg_name, disk1, disk2])
-            run_cmd_safe(["vgdisplay", vg_name])
-            set_color("yellow")
-            print("\n\t\t\tVolume group created successfully.")
+            disk1 = input("  First PV name: ")
+            disk2 = input("  Second PV name: ")
+            vg = input("  Volume group name: ")
+            run_cmd_safe(["vgcreate", vg, disk1, disk2])
+            run_cmd_safe(["vgdisplay", vg])
+            success("Volume group created.")
 
         elif choice == 6:
             run_cmd_safe(["vgdisplay"])
 
         elif choice == 7:
-            vg_name = input("Enter volume group name: ")
-            run_cmd_safe(["vgdisplay", vg_name])
+            vg = input("  Volume group name: ")
+            run_cmd_safe(["vgdisplay", vg])
 
         elif choice == 8:
-            vg_name = input("Enter volume group name: ")
-            lv_name = input("Enter logical volume name: ")
-            size = input("Enter size in GB: ")
-            run_cmd_safe(["lvcreate", "--size", f"{size}G", "--name", lv_name, vg_name])
-            run_cmd_safe(["lvdisplay", f"{vg_name}/{lv_name}"])
-            set_color("yellow")
-            print("\n\t\t\tLogical volume created successfully.")
+            vg = input("  Volume group name: ")
+            lv = input("  Logical volume name: ")
+            size = input("  Size in GB: ")
+            run_cmd_safe(["lvcreate", "--size", f"{size}G", "--name", lv, vg])
+            run_cmd_safe(["lvdisplay", f"{vg}/{lv}"])
+            success("Logical volume created.")
 
         elif choice == 9:
             run_cmd_safe(["lvdisplay"])
 
         elif choice == 10:
-            vg_name = input("Enter volume group name: ")
-            lv_name = input("Enter logical volume name: ")
-            run_cmd_safe(["lvdisplay", f"{vg_name}/{lv_name}"])
+            vg = input("  Volume group name: ")
+            lv = input("  Logical volume name: ")
+            run_cmd_safe(["lvdisplay", f"{vg}/{lv}"])
 
         elif choice == 11:
-            vg_name = input("Enter volume group name: ")
-            lv_name = input("Enter logical volume name: ")
-            run_cmd_safe(["mkfs.ext4", f"/dev/{vg_name}/{lv_name}"])
-            set_color("yellow")
-            print("\n\t\t\tLogical volume formatted successfully.")
+            vg = input("  Volume group name: ")
+            lv = input("  Logical volume name: ")
+            run_cmd_safe(["mkfs.ext4", f"/dev/{vg}/{lv}"])
+            success("Logical volume formatted.")
 
         elif choice == 12:
             _mount_volume()
 
         elif choice == 13:
-            size = input("Enter size in GB to extend: ")
-            vg_name = input("Enter volume group name: ")
-            lv_name = input("Enter logical volume name: ")
-            run_cmd_safe(["lvextend", "--size", f"+{size}G", f"/dev/{vg_name}/{lv_name}"])
-            set_color("yellow")
-            print("\n\t\t\tLogical volume extended. Resize the volume to use extended storage.")
+            size = input("  GB to extend: ")
+            vg = input("  Volume group name: ")
+            lv = input("  Logical volume name: ")
+            run_cmd_safe(["lvextend", "--size", f"+{size}G", f"/dev/{vg}/{lv}"])
+            success("Logical volume extended. Run option 14 to resize the filesystem.")
 
         elif choice == 14:
-            vg_name = input("Enter volume group name: ")
-            lv_name = input("Enter logical volume name: ")
-            run_cmd_safe(["resize2fs", f"/dev/{vg_name}/{lv_name}"])
-            set_color("yellow")
-            print("\n\t\t\tPartition resized successfully.")
+            vg = input("  Volume group name: ")
+            lv = input("  Logical volume name: ")
+            run_cmd_safe(["resize2fs", f"/dev/{vg}/{lv}"])
+            success("Partition resized.")
 
         elif choice == 15:
-            vg_name = input("Enter volume group name: ")
-            disk = input("Enter disk name: ")
-            run_cmd_safe(["vgextend", vg_name, disk])
+            vg = input("  Volume group name: ")
+            disk = input("  Disk name: ")
+            run_cmd_safe(["vgextend", vg, disk])
+            success("Volume group extended.")
 
         elif choice == 16:
             break
         else:
-            print("Invalid choice.")
+            error("Invalid choice.")
 
-        set_color("white")
         pause()
         clear_screen()

@@ -1,97 +1,86 @@
-"""Kubernetes module - cluster management, deployments, services, and pods."""
+"""Kubernetes module — cluster management, deployments, services, and pods."""
 
 from tui.utils import (
-    banner, clear_screen, get_choice, pause, run_cmd_safe,
-    separator, set_color,
+    banner, clear_screen, error, get_choice, info, pause,
+    print_menu, run_cmd_safe, separator, success, warn,
 )
 
 
-# ---------------------------------------------------------------------------
-# Cluster setup
-# ---------------------------------------------------------------------------
-
-def _setup_cluster():
-    print("""
-    --- Cluster Setup ---
-    Press 1: Install kubectl
-    Press 2: Install Minikube (local single-node cluster)
-    Press 3: Install kind (Kubernetes in Docker)
-    Press 4: Install Helm
-    Press 5: Back
-    """)
+def _setup_cluster() -> None:
     while True:
+        print_menu("Cluster Setup", [
+            "Install kubectl",
+            "Install Minikube (local single-node cluster)",
+            "Install kind (Kubernetes in Docker)",
+            "Install Helm",
+            "Back",
+        ])
         choice = get_choice()
         if choice is None:
             continue
         if choice == 1:
-            print("Installing kubectl...")
-            run_cmd_safe([
-                "curl", "-LO",
-                "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl",
-            ])
+            info("Installing kubectl...")
+            run_cmd_safe(["curl", "-LO",
+                "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"])
             run_cmd_safe(["chmod", "+x", "kubectl"])
             run_cmd_safe(["sudo", "mv", "kubectl", "/usr/local/bin/kubectl"])
             run_cmd_safe(["kubectl", "version", "--client"])
+            success("kubectl installed.")
         elif choice == 2:
-            print("Installing Minikube...")
-            run_cmd_safe([
-                "curl", "-LO",
-                "https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64",
-            ])
+            info("Installing Minikube...")
+            run_cmd_safe(["curl", "-LO",
+                "https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64"])
             run_cmd_safe(["sudo", "install", "minikube-linux-amd64", "/usr/local/bin/minikube"])
             run_cmd_safe(["minikube", "version"])
+            success("Minikube installed.")
         elif choice == 3:
-            print("Installing kind...")
-            run_cmd_safe([
-                "curl", "-Lo", "./kind",
-                "https://kind.sigs.k8s.io/dl/latest/kind-linux-amd64",
-            ])
+            info("Installing kind...")
+            run_cmd_safe(["curl", "-Lo", "./kind",
+                "https://kind.sigs.k8s.io/dl/latest/kind-linux-amd64"])
             run_cmd_safe(["chmod", "+x", "./kind"])
             run_cmd_safe(["sudo", "mv", "./kind", "/usr/local/bin/kind"])
             run_cmd_safe(["kind", "version"])
+            success("kind installed.")
         elif choice == 4:
-            print("Installing Helm...")
-            run_cmd_safe([
-                "curl", "-fsSL",
+            info("Installing Helm...")
+            run_cmd_safe(["curl", "-fsSL",
                 "https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3",
-                "-o", "get_helm.sh",
-            ])
+                "-o", "get_helm.sh"])
             run_cmd_safe(["chmod", "+x", "get_helm.sh"])
             run_cmd_safe(["./get_helm.sh"])
             run_cmd_safe(["helm", "version"])
+            success("Helm installed.")
         elif choice == 5:
             break
         else:
-            print("Invalid choice.")
+            error("Invalid choice.")
         pause()
         clear_screen()
 
 
-# ---------------------------------------------------------------------------
-# Minikube
-# ---------------------------------------------------------------------------
-
-def _minikube():
-    print("""
-    --- Minikube ---
-    Press 1: Start cluster
-    Press 2: Stop cluster
-    Press 3: Delete cluster
-    Press 4: Cluster status
-    Press 5: Open dashboard
-    Press 6: View cluster IP
-    Press 7: Back
-    """)
+def _minikube() -> None:
     while True:
+        print_menu("Minikube", [
+            "Start cluster",
+            "Stop cluster",
+            "Delete cluster",
+            "Cluster status",
+            "Open dashboard",
+            "View cluster IP",
+            "Back",
+        ])
         choice = get_choice()
         if choice is None:
             continue
         if choice == 1:
             run_cmd_safe(["minikube", "start"])
+            success("Cluster started.")
         elif choice == 2:
             run_cmd_safe(["minikube", "stop"])
+            success("Cluster stopped.")
         elif choice == 3:
             run_cmd_safe(["minikube", "delete"])
+            success("Cluster deleted.")
         elif choice == 4:
             run_cmd_safe(["minikube", "status"])
         elif choice == 5:
@@ -101,466 +90,409 @@ def _minikube():
         elif choice == 7:
             break
         else:
-            print("Invalid choice.")
+            error("Invalid choice.")
         pause()
         clear_screen()
 
 
-# ---------------------------------------------------------------------------
-# Nodes
-# ---------------------------------------------------------------------------
-
-def _nodes():
-    print("""
-    --- Nodes ---
-    Press 1: List all nodes
-    Press 2: Describe a node
-    Press 3: View node resource usage
-    Press 4: Cordon node (mark unschedulable)
-    Press 5: Uncordon node
-    Press 6: Drain node
-    Press 7: Back
-    """)
+def _nodes() -> None:
     while True:
+        print_menu("Nodes", [
+            "List all nodes",
+            "Describe a node",
+            "Node resource usage (top)",
+            "Cordon node (mark unschedulable)",
+            "Uncordon node",
+            "Drain node",
+            "Back",
+        ])
         choice = get_choice()
         if choice is None:
             continue
         if choice == 1:
             run_cmd_safe(["kubectl", "get", "nodes", "-o", "wide"])
         elif choice == 2:
-            name = input("Enter node name: ")
-            run_cmd_safe(["kubectl", "describe", "node", name])
+            run_cmd_safe(["kubectl", "describe", "node", input("  Node name: ")])
         elif choice == 3:
             run_cmd_safe(["kubectl", "top", "nodes"])
         elif choice == 4:
-            name = input("Enter node name: ")
+            name = input("  Node name: ")
             run_cmd_safe(["kubectl", "cordon", name])
+            success(f"Node {name} cordoned.")
         elif choice == 5:
-            name = input("Enter node name: ")
+            name = input("  Node name: ")
             run_cmd_safe(["kubectl", "uncordon", name])
+            success(f"Node {name} uncordoned.")
         elif choice == 6:
-            name = input("Enter node name: ")
+            name = input("  Node name: ")
             run_cmd_safe(["kubectl", "drain", name, "--ignore-daemonsets", "--delete-emptydir-data"])
+            success(f"Node {name} drained.")
         elif choice == 7:
             break
         else:
-            print("Invalid choice.")
+            error("Invalid choice.")
         pause()
         clear_screen()
 
 
-# ---------------------------------------------------------------------------
-# Namespaces
-# ---------------------------------------------------------------------------
-
-def _namespaces():
-    print("""
-    --- Namespaces ---
-    Press 1: List namespaces
-    Press 2: Create namespace
-    Press 3: Delete namespace
-    Press 4: Describe namespace
-    Press 5: Back
-    """)
+def _namespaces() -> None:
     while True:
+        print_menu("Namespaces", [
+            "List namespaces",
+            "Create namespace",
+            "Delete namespace",
+            "Describe namespace",
+            "Back",
+        ])
         choice = get_choice()
         if choice is None:
             continue
         if choice == 1:
             run_cmd_safe(["kubectl", "get", "namespaces"])
         elif choice == 2:
-            name = input("Enter namespace name: ")
+            name = input("  Namespace name: ")
             run_cmd_safe(["kubectl", "create", "namespace", name])
+            success(f"Namespace '{name}' created.")
         elif choice == 3:
-            name = input("Enter namespace name: ")
+            name = input("  Namespace name: ")
             run_cmd_safe(["kubectl", "delete", "namespace", name])
+            success(f"Namespace '{name}' deleted.")
         elif choice == 4:
-            name = input("Enter namespace name: ")
-            run_cmd_safe(["kubectl", "describe", "namespace", name])
+            run_cmd_safe(["kubectl", "describe", "namespace", input("  Namespace name: ")])
         elif choice == 5:
             break
         else:
-            print("Invalid choice.")
+            error("Invalid choice.")
         pause()
         clear_screen()
 
 
-# ---------------------------------------------------------------------------
-# Deployments
-# ---------------------------------------------------------------------------
-
-def _deployments():
-    print("""
-    --- Deployments ---
-    Press 1:  List deployments
-    Press 2:  Create deployment
-    Press 3:  Describe deployment
-    Press 4:  Delete deployment
-    Press 5:  Scale deployment
-    Press 6:  Update image (rolling update)
-    Press 7:  Rollout status
-    Press 8:  Rollback deployment
-    Press 9:  Pause rollout
-    Press 10: Resume rollout
-    Press 11: Back
-    """)
+def _deployments() -> None:
     while True:
+        print_menu("Deployments", [
+            "List deployments",
+            "Create deployment",
+            "Describe deployment",
+            "Delete deployment",
+            "Scale deployment",
+            "Update image (rolling update)",
+            "Rollout status",
+            "Rollback deployment",
+            "Pause rollout",
+            "Resume rollout",
+            "Back",
+        ])
         choice = get_choice()
         if choice is None:
             continue
 
-        ns = input("Enter namespace (leave blank for 'default'): ").strip() or "default"
+        ns = input("  Namespace (blank = 'default'): ").strip() or "default"
 
         if choice == 1:
             run_cmd_safe(["kubectl", "get", "deployments", "-n", ns, "-o", "wide"])
         elif choice == 2:
-            name = input("Enter deployment name: ")
-            image = input("Enter container image (e.g. nginx:latest): ")
-            replicas = input("Enter number of replicas (default 1): ").strip() or "1"
-            run_cmd_safe([
-                "kubectl", "create", "deployment", name,
-                "--image", image,
-                "--replicas", replicas,
-                "-n", ns,
-            ])
+            name     = input("  Deployment name: ")
+            image    = input("  Container image (e.g. nginx:latest): ")
+            replicas = input("  Replicas (default 1): ").strip() or "1"
+            run_cmd_safe(["kubectl", "create", "deployment", name,
+                "--image", image, "--replicas", replicas, "-n", ns])
+            success(f"Deployment '{name}' created.")
         elif choice == 3:
-            name = input("Enter deployment name: ")
-            run_cmd_safe(["kubectl", "describe", "deployment", name, "-n", ns])
+            run_cmd_safe(["kubectl", "describe", "deployment", input("  Deployment name: "), "-n", ns])
         elif choice == 4:
-            name = input("Enter deployment name: ")
+            name = input("  Deployment name: ")
             run_cmd_safe(["kubectl", "delete", "deployment", name, "-n", ns])
+            success(f"Deployment '{name}' deleted.")
         elif choice == 5:
-            name = input("Enter deployment name: ")
-            replicas = input("Enter desired replica count: ")
+            name     = input("  Deployment name: ")
+            replicas = input("  Desired replicas: ")
             run_cmd_safe(["kubectl", "scale", "deployment", name, f"--replicas={replicas}", "-n", ns])
+            success(f"Scaled to {replicas} replicas.")
         elif choice == 6:
-            name = input("Enter deployment name: ")
-            container = input("Enter container name: ")
-            image = input("Enter new image (e.g. nginx:1.25): ")
-            run_cmd_safe([
-                "kubectl", "set", "image",
-                f"deployment/{name}", f"{container}={image}",
-                "-n", ns,
-            ])
+            name      = input("  Deployment name: ")
+            container = input("  Container name: ")
+            image     = input("  New image: ")
+            run_cmd_safe(["kubectl", "set", "image",
+                f"deployment/{name}", f"{container}={image}", "-n", ns])
+            info("Rolling update triggered.")
         elif choice == 7:
-            name = input("Enter deployment name: ")
-            run_cmd_safe(["kubectl", "rollout", "status", f"deployment/{name}", "-n", ns])
+            run_cmd_safe(["kubectl", "rollout", "status",
+                f"deployment/{input('  Deployment name: ')}", "-n", ns])
         elif choice == 8:
-            name = input("Enter deployment name: ")
+            name = input("  Deployment name: ")
             run_cmd_safe(["kubectl", "rollout", "undo", f"deployment/{name}", "-n", ns])
+            success("Rollback complete.")
         elif choice == 9:
-            name = input("Enter deployment name: ")
+            name = input("  Deployment name: ")
             run_cmd_safe(["kubectl", "rollout", "pause", f"deployment/{name}", "-n", ns])
+            success("Rollout paused.")
         elif choice == 10:
-            name = input("Enter deployment name: ")
+            name = input("  Deployment name: ")
             run_cmd_safe(["kubectl", "rollout", "resume", f"deployment/{name}", "-n", ns])
+            success("Rollout resumed.")
         elif choice == 11:
             break
         else:
-            print("Invalid choice.")
+            error("Invalid choice.")
         pause()
         clear_screen()
 
 
-# ---------------------------------------------------------------------------
-# Pods
-# ---------------------------------------------------------------------------
-
-def _pods():
-    print("""
-    --- Pods ---
-    Press 1: List pods
-    Press 2: Describe pod
-    Press 3: View pod logs
-    Press 4: Follow pod logs
-    Press 5: Execute command in pod
-    Press 6: Open shell in pod
-    Press 7: Delete pod
-    Press 8: View pod resource usage
-    Press 9: Back
-    """)
+def _pods() -> None:
     while True:
+        print_menu("Pods", [
+            "List pods",
+            "Describe pod",
+            "View pod logs",
+            "Follow pod logs (live)",
+            "Execute command in pod",
+            "Open shell in pod",
+            "Delete pod",
+            "Pod resource usage (top)",
+            "Back",
+        ])
         choice = get_choice()
         if choice is None:
             continue
 
-        ns = input("Enter namespace (leave blank for 'default'): ").strip() or "default"
+        ns = input("  Namespace (blank = 'default'): ").strip() or "default"
 
         if choice == 1:
             run_cmd_safe(["kubectl", "get", "pods", "-n", ns, "-o", "wide"])
         elif choice == 2:
-            name = input("Enter pod name: ")
-            run_cmd_safe(["kubectl", "describe", "pod", name, "-n", ns])
+            run_cmd_safe(["kubectl", "describe", "pod", input("  Pod name: "), "-n", ns])
         elif choice == 3:
-            name = input("Enter pod name: ")
-            run_cmd_safe(["kubectl", "logs", name, "-n", ns])
+            run_cmd_safe(["kubectl", "logs", input("  Pod name: "), "-n", ns])
         elif choice == 4:
-            name = input("Enter pod name: ")
-            run_cmd_safe(["kubectl", "logs", "-f", name, "-n", ns])
+            run_cmd_safe(["kubectl", "logs", "-f", input("  Pod name: "), "-n", ns])
         elif choice == 5:
-            name = input("Enter pod name: ")
-            cmd = input("Enter command to run (e.g. ls /): ")
+            name = input("  Pod name: ")
+            cmd  = input("  Command to run (e.g. ls /): ")
             run_cmd_safe(["kubectl", "exec", name, "-n", ns, "--", *cmd.split()])
         elif choice == 6:
-            name = input("Enter pod name: ")
-            run_cmd_safe(["kubectl", "exec", "-it", name, "-n", ns, "--", "/bin/sh"])
+            run_cmd_safe(["kubectl", "exec", "-it", input("  Pod name: "), "-n", ns, "--", "/bin/sh"])
         elif choice == 7:
-            name = input("Enter pod name: ")
+            name = input("  Pod name: ")
             run_cmd_safe(["kubectl", "delete", "pod", name, "-n", ns])
+            success(f"Pod '{name}' deleted.")
         elif choice == 8:
             run_cmd_safe(["kubectl", "top", "pods", "-n", ns])
         elif choice == 9:
             break
         else:
-            print("Invalid choice.")
+            error("Invalid choice.")
         pause()
         clear_screen()
 
 
-# ---------------------------------------------------------------------------
-# Services
-# ---------------------------------------------------------------------------
-
-def _services():
-    print("""
-    --- Services ---
-    Press 1: List services
-    Press 2: Expose deployment as service
-    Press 3: Describe service
-    Press 4: Delete service
-    Press 5: Get service URL (Minikube)
-    Press 6: Back
-    """)
+def _services() -> None:
     while True:
+        print_menu("Services", [
+            "List services",
+            "Expose deployment as service",
+            "Describe service",
+            "Delete service",
+            "Get service URL (Minikube)",
+            "Back",
+        ])
         choice = get_choice()
         if choice is None:
             continue
 
-        ns = input("Enter namespace (leave blank for 'default'): ").strip() or "default"
+        ns = input("  Namespace (blank = 'default'): ").strip() or "default"
 
         if choice == 1:
             run_cmd_safe(["kubectl", "get", "services", "-n", ns])
         elif choice == 2:
-            name = input("Enter deployment name to expose: ")
-            port = input("Enter port: ")
-            svc_type = input("Enter service type (ClusterIP/NodePort/LoadBalancer): ").strip() or "ClusterIP"
-            run_cmd_safe([
-                "kubectl", "expose", "deployment", name,
-                "--port", port,
-                "--type", svc_type,
-                "-n", ns,
-            ])
+            name     = input("  Deployment name: ")
+            port     = input("  Port: ")
+            svc_type = input("  Type (ClusterIP/NodePort/LoadBalancer): ").strip() or "ClusterIP"
+            run_cmd_safe(["kubectl", "expose", "deployment", name,
+                "--port", port, "--type", svc_type, "-n", ns])
+            success(f"Service '{name}' created.")
         elif choice == 3:
-            name = input("Enter service name: ")
-            run_cmd_safe(["kubectl", "describe", "service", name, "-n", ns])
+            run_cmd_safe(["kubectl", "describe", "service", input("  Service name: "), "-n", ns])
         elif choice == 4:
-            name = input("Enter service name: ")
+            name = input("  Service name: ")
             run_cmd_safe(["kubectl", "delete", "service", name, "-n", ns])
+            success(f"Service '{name}' deleted.")
         elif choice == 5:
-            name = input("Enter service name: ")
-            run_cmd_safe(["minikube", "service", name, "-n", ns, "--url"])
+            run_cmd_safe(["minikube", "service", input("  Service name: "), "-n", ns, "--url"])
         elif choice == 6:
             break
         else:
-            print("Invalid choice.")
+            error("Invalid choice.")
         pause()
         clear_screen()
 
 
-# ---------------------------------------------------------------------------
-# ConfigMaps & Secrets
-# ---------------------------------------------------------------------------
-
-def _config_secrets():
-    print("""
-    --- ConfigMaps & Secrets ---
-    Press 1: List ConfigMaps
-    Press 2: Create ConfigMap from literal
-    Press 3: Describe ConfigMap
-    Press 4: Delete ConfigMap
-    Press 5: List Secrets
-    Press 6: Create Secret (generic)
-    Press 7: Describe Secret
-    Press 8: Delete Secret
-    Press 9: Back
-    """)
+def _config_secrets() -> None:
     while True:
+        print_menu("ConfigMaps & Secrets", [
+            "List ConfigMaps",
+            "Create ConfigMap (from literal)",
+            "Describe ConfigMap",
+            "Delete ConfigMap",
+            "List Secrets",
+            "Create Secret (generic)",
+            "Describe Secret",
+            "Delete Secret",
+            "Back",
+        ])
         choice = get_choice()
         if choice is None:
             continue
 
-        ns = input("Enter namespace (leave blank for 'default'): ").strip() or "default"
+        ns = input("  Namespace (blank = 'default'): ").strip() or "default"
 
         if choice == 1:
             run_cmd_safe(["kubectl", "get", "configmaps", "-n", ns])
         elif choice == 2:
-            name = input("Enter ConfigMap name: ")
-            key = input("Enter key: ")
-            value = input("Enter value: ")
-            run_cmd_safe([
-                "kubectl", "create", "configmap", name,
-                f"--from-literal={key}={value}",
-                "-n", ns,
-            ])
+            name  = input("  ConfigMap name: ")
+            key   = input("  Key: ")
+            value = input("  Value: ")
+            run_cmd_safe(["kubectl", "create", "configmap", name,
+                f"--from-literal={key}={value}", "-n", ns])
+            success(f"ConfigMap '{name}' created.")
         elif choice == 3:
-            name = input("Enter ConfigMap name: ")
-            run_cmd_safe(["kubectl", "describe", "configmap", name, "-n", ns])
+            run_cmd_safe(["kubectl", "describe", "configmap", input("  ConfigMap name: "), "-n", ns])
         elif choice == 4:
-            name = input("Enter ConfigMap name: ")
+            name = input("  ConfigMap name: ")
             run_cmd_safe(["kubectl", "delete", "configmap", name, "-n", ns])
+            success(f"ConfigMap '{name}' deleted.")
         elif choice == 5:
             run_cmd_safe(["kubectl", "get", "secrets", "-n", ns])
         elif choice == 6:
-            name = input("Enter Secret name: ")
-            key = input("Enter key: ")
-            value = input("Enter value: ")
-            run_cmd_safe([
-                "kubectl", "create", "secret", "generic", name,
-                f"--from-literal={key}={value}",
-                "-n", ns,
-            ])
+            name  = input("  Secret name: ")
+            key   = input("  Key: ")
+            value = input("  Value: ")
+            run_cmd_safe(["kubectl", "create", "secret", "generic", name,
+                f"--from-literal={key}={value}", "-n", ns])
+            success(f"Secret '{name}' created.")
         elif choice == 7:
-            name = input("Enter Secret name: ")
-            run_cmd_safe(["kubectl", "describe", "secret", name, "-n", ns])
+            run_cmd_safe(["kubectl", "describe", "secret", input("  Secret name: "), "-n", ns])
         elif choice == 8:
-            name = input("Enter Secret name: ")
+            name = input("  Secret name: ")
             run_cmd_safe(["kubectl", "delete", "secret", name, "-n", ns])
+            success(f"Secret '{name}' deleted.")
         elif choice == 9:
             break
         else:
-            print("Invalid choice.")
+            error("Invalid choice.")
         pause()
         clear_screen()
 
 
-# ---------------------------------------------------------------------------
-# Apply / Delete manifests
-# ---------------------------------------------------------------------------
-
-def _manifests():
-    print("""
-    --- YAML Manifests ---
-    Press 1: Apply manifest (kubectl apply -f)
-    Press 2: Delete resources from manifest (kubectl delete -f)
-    Press 3: Dry-run apply (validate without applying)
-    Press 4: View current context / cluster info
-    Press 5: Switch context
-    Press 6: List all contexts
-    Press 7: Back
-    """)
+def _manifests() -> None:
     while True:
+        print_menu("YAML Manifests & Contexts", [
+            "Apply manifest (kubectl apply -f)",
+            "Delete resources from manifest",
+            "Dry-run apply (validate only)",
+            "View cluster info / current context",
+            "Switch context",
+            "List all contexts",
+            "Back",
+        ])
         choice = get_choice()
         if choice is None:
             continue
         if choice == 1:
-            path = input("Enter path to YAML file or directory: ")
+            path = input("  Path to YAML file or directory: ")
             run_cmd_safe(["kubectl", "apply", "-f", path])
         elif choice == 2:
-            path = input("Enter path to YAML file or directory: ")
+            path = input("  Path to YAML file or directory: ")
             run_cmd_safe(["kubectl", "delete", "-f", path])
         elif choice == 3:
-            path = input("Enter path to YAML file or directory: ")
+            path = input("  Path to YAML file or directory: ")
             run_cmd_safe(["kubectl", "apply", "--dry-run=client", "-f", path])
         elif choice == 4:
             run_cmd_safe(["kubectl", "cluster-info"])
         elif choice == 5:
-            name = input("Enter context name: ")
+            name = input("  Context name: ")
             run_cmd_safe(["kubectl", "config", "use-context", name])
+            success(f"Switched to context '{name}'.")
         elif choice == 6:
             run_cmd_safe(["kubectl", "config", "get-contexts"])
         elif choice == 7:
             break
         else:
-            print("Invalid choice.")
+            error("Invalid choice.")
         pause()
         clear_screen()
 
 
-# ---------------------------------------------------------------------------
-# Helm
-# ---------------------------------------------------------------------------
-
-def _helm():
-    print("""
-    --- Helm ---
-    Press 1: List installed releases
-    Press 2: Add Helm repo
-    Press 3: Update repos
-    Press 4: Search a chart
-    Press 5: Install a chart
-    Press 6: Upgrade a release
-    Press 7: Uninstall a release
-    Press 8: Back
-    """)
+def _helm() -> None:
     while True:
+        print_menu("Helm", [
+            "List installed releases",
+            "Add Helm repo",
+            "Update repos",
+            "Search a chart",
+            "Install a chart",
+            "Upgrade a release",
+            "Uninstall a release",
+            "Back",
+        ])
         choice = get_choice()
         if choice is None:
             continue
         if choice == 1:
-            ns = input("Enter namespace (leave blank for all): ").strip()
-            cmd = ["helm", "list"]
-            if ns:
-                cmd += ["-n", ns]
-            else:
-                cmd += ["-A"]
-            run_cmd_safe(cmd)
+            ns = input("  Namespace (blank = all): ").strip()
+            run_cmd_safe(["helm", "list"] + (["-n", ns] if ns else ["-A"]))
         elif choice == 2:
-            name = input("Enter repo name: ")
-            url = input("Enter repo URL: ")
+            name = input("  Repo name: ")
+            url  = input("  Repo URL: ")
             run_cmd_safe(["helm", "repo", "add", name, url])
+            success(f"Repo '{name}' added.")
         elif choice == 3:
             run_cmd_safe(["helm", "repo", "update"])
+            success("Repos updated.")
         elif choice == 4:
-            term = input("Enter search term: ")
-            run_cmd_safe(["helm", "search", "repo", term])
+            run_cmd_safe(["helm", "search", "repo", input("  Search term: ")])
         elif choice == 5:
-            release = input("Enter release name: ")
-            chart = input("Enter chart (e.g. bitnami/nginx): ")
-            ns = input("Enter namespace (leave blank for 'default'): ").strip() or "default"
+            release = input("  Release name: ")
+            chart   = input("  Chart (e.g. bitnami/nginx): ")
+            ns      = input("  Namespace (blank = 'default'): ").strip() or "default"
             run_cmd_safe(["helm", "install", release, chart, "-n", ns, "--create-namespace"])
+            success(f"Release '{release}' installed.")
         elif choice == 6:
-            release = input("Enter release name: ")
-            chart = input("Enter chart: ")
-            ns = input("Enter namespace: ").strip() or "default"
+            release = input("  Release name: ")
+            chart   = input("  Chart: ")
+            ns      = input("  Namespace: ").strip() or "default"
             run_cmd_safe(["helm", "upgrade", release, chart, "-n", ns])
+            success(f"Release '{release}' upgraded.")
         elif choice == 7:
-            release = input("Enter release name: ")
-            ns = input("Enter namespace: ").strip() or "default"
+            release = input("  Release name: ")
+            ns      = input("  Namespace: ").strip() or "default"
             run_cmd_safe(["helm", "uninstall", release, "-n", ns])
+            success(f"Release '{release}' uninstalled.")
         elif choice == 8:
             break
         else:
-            print("Invalid choice.")
+            error("Invalid choice.")
         pause()
         clear_screen()
 
 
-# ---------------------------------------------------------------------------
-# Main entry
-# ---------------------------------------------------------------------------
-
-def run():
-    """Main Kubernetes menu."""
+def run() -> None:
     while True:
         clear_screen()
         banner("Kubernetes")
-        set_color("green")
         separator()
-        print("""
-        Press 1: Setup (kubectl / Minikube / kind / Helm)
-        Press 2: Minikube cluster management
-        Press 3: Nodes
-        Press 4: Namespaces
-        Press 5: Deployments
-        Press 6: Pods
-        Press 7: Services
-        Press 8: ConfigMaps & Secrets
-        Press 9: Apply / Delete YAML manifests
-        Press 10: Helm
-        Press 11: Return to main menu
-        """)
-        separator()
-        set_color("white")
+        print_menu("Kubernetes", [
+            "Setup (kubectl / Minikube / kind / Helm)",
+            "Minikube cluster management",
+            "Nodes",
+            "Namespaces",
+            "Deployments",
+            "Pods",
+            "Services",
+            "ConfigMaps & Secrets",
+            "Apply / Delete YAML manifests",
+            "Helm",
+            "Return to main menu",
+        ])
 
         choice = get_choice()
         if choice is None:
@@ -589,6 +521,6 @@ def run():
         elif choice == 11:
             break
         else:
-            print("Invalid choice.")
+            error("Invalid choice.")
 
         pause()

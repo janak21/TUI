@@ -1,42 +1,37 @@
-"""Main CLI entry point - renders the main menu and dispatches to modules."""
+"""Main CLI entry point — renders the main menu and dispatches to modules."""
 
 from platform import system as detect_platform
 
 import pyfiglet
 
-from tui.utils import banner, clear_screen, get_choice, pause, separator, set_color
+from tui.utils import banner, clear_screen, get_choice, pause, separator
 from tui.modules import aws, docker, hadoop, kubernetes, linux, lvm, webserver
 
 
-def detect_os():
-    """Display detected OS with a banner."""
+def detect_os() -> None:
     os_name = detect_platform()
-    set_color("magenta")
-    print(pyfiglet.figlet_format(os_name, font="slant"))
+    banner(os_name, subtitle="Detected OS")
     pause()
     clear_screen()
 
 
-def main_menu():
-    """Run the main TUI menu loop."""
+def main_menu() -> None:
     while True:
         clear_screen()
+        banner("TUI", subtitle="Cloud & DevOps Terminal Interface")
         separator()
-        banner("Main Menu")
-        set_color("green")
-        print("""
-        1) Detect Operating System
-        2) Hadoop
-        3) AWS
-        4) Docker
-        5) Kubernetes
-        6) Webserver
-        7) Linux Partitions (LVM)
-        8) Linux Commands
-        9) Exit
-        """)
-        separator()
-        set_color("white")
+        from tui.utils import print_menu
+        print_menu("Main Menu", [
+            "Detect Operating System",
+            "Hadoop",
+            "AWS",
+            "Docker",
+            "Kubernetes",
+            "Webserver",
+            "Linux Partitions (LVM)",
+            "Linux Commands",
+            "Exit",
+        ])
 
         choice = get_choice()
         if choice is None:
@@ -59,7 +54,9 @@ def main_menu():
         elif choice == 8:
             linux.run()
         elif choice == 9:
-            print("Goodbye!")
+            from tui.utils import console
+            console.print("\n[bold yellow]Goodbye![/bold yellow]\n")
             break
         else:
-            print("Invalid option.")
+            from tui.utils import error
+            error("Invalid option.")
