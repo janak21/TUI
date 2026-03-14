@@ -9,7 +9,6 @@ import pyfiglet
 from rich import box
 from rich.console import Console
 from rich.panel import Panel
-from rich.prompt import IntPrompt
 from rich.rule import Rule
 from rich.table import Table
 from rich.text import Text
@@ -65,10 +64,14 @@ def warn(msg: str) -> None:
 
 def get_choice(prompt: str = "Enter your choice") -> int | None:
     try:
-        return IntPrompt.ask(f"\n[bold cyan]{prompt}[/bold cyan]")
-    except (ValueError, EOFError):
+        console.print(f"\n[bold cyan]{prompt}:[/bold cyan] ", end="")
+        raw = input()
+        return int(raw.strip())
+    except ValueError:
         error("Please enter a valid number.")
         return None
+    except EOFError:
+        raise  # propagate so while-True loops terminate cleanly
 
 
 def pause(msg: str = "Press Enter to continue...") -> None:

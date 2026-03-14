@@ -4,7 +4,7 @@ from platform import system as detect_platform
 
 import pyfiglet
 
-from tui.utils import banner, clear_screen, get_choice, pause, separator
+from tui.utils import banner, clear_screen, console, error, get_choice, pause, print_menu, separator
 from tui.modules import aws, docker, hadoop, kubernetes, linux, lvm, webserver
 
 
@@ -20,7 +20,6 @@ def main_menu() -> None:
         clear_screen()
         banner("TUI", subtitle="Cloud & DevOps Terminal Interface")
         separator()
-        from tui.utils import print_menu
         print_menu("Main Menu", [
             "Detect Operating System",
             "Hadoop",
@@ -54,9 +53,7 @@ def main_menu() -> None:
         elif choice == 8:
             linux.run()
         elif choice == 9:
-            from tui.utils import console
             console.print("\n[bold yellow]Goodbye![/bold yellow]\n")
             break
         else:
-            from tui.utils import error
             error("Invalid option.")
