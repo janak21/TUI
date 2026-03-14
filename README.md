@@ -1,6 +1,6 @@
 # TUI — Terminal User Interface for Cloud & DevOps
 
-![CI](https://github.com/your-username/TUI/actions/workflows/ci.yml/badge.svg)
+![CI](https://github.com/janak21/TUI/actions/workflows/ci.yml/badge.svg)
 
 A Python CLI tool for managing and automating enterprise technologies through an interactive menu-driven interface.
 
