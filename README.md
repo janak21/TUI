@@ -27,7 +27,7 @@ TUI provides a single terminal entry point to install, configure, and manage:
 ## Installation
 
 ```bash
-git clone https://github.com/your-username/TUI.git
+git clone https://github.com/janak21/TUI.git
 cd TUI
 pip install -e .
 ```
