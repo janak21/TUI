@@ -32,11 +32,16 @@ cd TUI
 pip install -e .
 ```
 
+Or using requirements.txt:
+```bash
+pip install -r requirements.txt
+```
+
 **Prerequisites**
 - Python 3.10+
 - `sudo` / root privileges (required for system-level operations)
-- Linux environment (tested on CentOS/RHEL — uses `yum`, `systemctl`)
-- Tools installed only as needed: `aws`, `docker`, `kubectl`, `hadoop`, etc.
+- Linux environment — supports `apt` (Ubuntu/Debian) and `yum`/`dnf` (CentOS/RHEL/Fedora)
+- Tools installed only as needed: `aws`, `docker`, `kubectl`, `hadoop`, etc. — TUI will warn if a tool is missing and point you to the install option
 
 ---
 

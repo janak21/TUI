@@ -1,8 +1,8 @@
 """Docker module — installation, image, and container management."""
 
 from tui.utils import (
-    banner, clear_screen, error, get_choice, info, pause,
-    print_menu, run_cmd_safe, separator, success,
+    banner, clear_screen, detect_pkg_manager, error, get_choice, info, pause,
+    print_menu, require_tool, run_cmd, run_cmd_safe, separator, success,
 )
 
 
@@ -103,7 +103,7 @@ def _stop_containers() -> None:
             success("Container stopped.")
         elif choice == 2:
             info("Stopping all containers...")
-            run_cmd_safe(["docker", "stop", "$(docker ps -q)"])
+            run_cmd("docker stop $(docker ps -q)")  # shell substitution required
             success("All containers stopped.")
         elif choice == 3:
             break
@@ -141,31 +141,41 @@ def run() -> None:
             continue
 
         if choice == 1:
-            run_cmd_safe(["sudo", "yum", "install", "docker", "--nobest"])
+            pm = detect_pkg_manager()
+            if pm == "apt-get":
+                run_cmd("curl -fsSL https://get.docker.com | sudo sh")
+            else:
+                run_cmd_safe(["sudo", pm, "install", "-y", "docker"])
         elif choice == 2:
             _docker_service()
         elif choice == 3:
-            run_cmd_safe(["docker", "-v"])
-        elif choice == 4:
-            name = input("  Image/distro name to search: ")
-            run_cmd_safe(["docker", "search", name])
-        elif choice == 5:
-            name = input("  Image name to pull: ")
-            run_cmd_safe(["docker", "pull", name])
-        elif choice == 6:
-            run_cmd_safe(["docker", "images"])
-        elif choice == 7:
-            name = input("  Container name: ")
-            img = input("  Image name: ")
-            run_cmd_safe(["docker", "run", "-it", "--name", name, img])
-        elif choice == 8:
-            run_cmd_safe(["docker", "ps"])
-        elif choice == 9:
-            run_cmd_safe(["docker", "ps", "-a"])
-        elif choice == 10:
-            name = input("  Container name: ")
-            run_cmd_safe(["docker", "start", name])
-            run_cmd_safe(["docker", "attach", name])
+            if require_tool("docker"):
+                run_cmd_safe(["docker", "-v"])
+        elif choice in range(4, 14):
+            if not require_tool("docker"):
+                pause()
+                clear_screen()
+                continue
+            if choice == 4:
+                name = input("  Image/distro name to search: ")
+                run_cmd_safe(["docker", "search", name])
+            elif choice == 5:
+                name = input("  Image name to pull: ")
+                run_cmd_safe(["docker", "pull", name])
+            elif choice == 6:
+                run_cmd_safe(["docker", "images"])
+            elif choice == 7:
+                name = input("  Container name: ")
+                img = input("  Image name: ")
+                run_cmd_safe(["docker", "run", "-it", "--name", name, img])
+            elif choice == 8:
+                run_cmd_safe(["docker", "ps"])
+            elif choice == 9:
+                run_cmd_safe(["docker", "ps", "-a"])
+            elif choice == 10:
+                name = input("  Container name: ")
+                run_cmd_safe(["docker", "start", name])
+                run_cmd_safe(["docker", "attach", name])
         elif choice == 11:
             _delete_images()
         elif choice == 12:

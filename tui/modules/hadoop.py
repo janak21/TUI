@@ -7,14 +7,15 @@ from tui.utils import (
 
 
 def _install_hadoop() -> None:
-    info("Installing Hadoop (and Java dependency)...")
+    info("Installing Hadoop 3.4.0 (and Java dependency)...")
     run_cmd_safe([
         "curl",
-        "https://archive.apache.org/dist/hadoop/core/hadoop-1.2.1/hadoop-1.2.1-1.x86_64.rpm",
-        "--output", "hadoop-1.2.1-1.x86_64.rpm",
+        "https://dlcdn.apache.org/hadoop/common/hadoop-3.4.0/hadoop-3.4.0.tar.gz",
+        "--output", "hadoop-3.4.0.tar.gz",
     ])
-    run_cmd_safe(["sudo", "rpm", "-i", "hadoop-1.2.1-1.x86_64.rpm", "--force"])
-    success("Hadoop installed.")
+    run_cmd_safe(["sudo", "tar", "-xzf", "hadoop-3.4.0.tar.gz", "-C", "/opt"])
+    run_cmd_safe(["sudo", "ln", "-sf", "/opt/hadoop-3.4.0", "/opt/hadoop"])
+    success("Hadoop 3.4.0 installed at /opt/hadoop.")
 
 
 def _configure_node() -> None:

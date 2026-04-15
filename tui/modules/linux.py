@@ -1,7 +1,7 @@
 """Linux Commands module — common system utilities."""
 
 from tui.utils import (
-    banner, clear_screen, error, get_choice, pause,
+    banner, clear_screen, detect_pkg_manager, error, get_choice, pause,
     print_menu, run_cmd_safe, separator,
 )
 
@@ -37,7 +37,7 @@ def run() -> None:
         elif choice == 2:
             run_cmd_safe(["date"])
         elif choice == 3:
-            run_cmd_safe(["ifconfig"])
+            run_cmd_safe(["ip", "addr"])
         elif choice == 4:
             name = input("  Folder name: ")
             run_cmd_safe(["mkdir", "-p", name])
@@ -48,7 +48,7 @@ def run() -> None:
             name = input("  File name: ")
             run_cmd_safe(["nano", name])
         elif choice == 7:
-            run_cmd_safe(["netstat", "-tnlp"])
+            run_cmd_safe(["ss", "-tnlp"])
         elif choice == 8:
             run_cmd_safe(["firefox"])
         elif choice == 9:
@@ -57,12 +57,14 @@ def run() -> None:
             run_cmd_safe(["free", "-m"])
         elif choice == 11:
             name = input("  Software name: ")
-            run_cmd_safe(["sudo", "yum", "install", name])
+            pm = detect_pkg_manager()
+            run_cmd_safe(["sudo", pm, "install", "-y", name])
         elif choice == 12:
             run_cmd_safe(["pwd"])
         elif choice == 13:
             name = input("  Software name: ")
-            run_cmd_safe(["sudo", "yum", "remove", name])
+            pm = detect_pkg_manager()
+            run_cmd_safe(["sudo", pm, "remove", name])
         elif choice == 14:
             break
         else:

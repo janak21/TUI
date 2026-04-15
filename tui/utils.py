@@ -1,6 +1,7 @@
 """Shared utilities for TUI — display (Rich), command execution, and auth."""
 
 import shlex
+import shutil
 import subprocess
 import sys
 from platform import system as detect_platform
@@ -89,12 +90,14 @@ def clear_screen() -> None:
 
 def run_cmd_safe(args: list[str], **kwargs) -> int:
     """Run a command with a list of args — safe from shell injection."""
-    result = subprocess.run(args, check=False, **kwargs)
+    result = subprocess.run(args, check=False, capture_output=True, text=True, **kwargs)
+    if result.returncode != 0 and result.stderr:
+        console.print(f"[dim]{result.stderr}[/dim]")
     return result.returncode
 
 
 def run_cmd(cmd: str, **kwargs) -> int:
-    """Run a hardcoded shell command string."""
+    """Run a hardcoded shell command string (no user input allowed here)."""
     result = subprocess.run(cmd, shell=True, check=False, **kwargs)
     return result.returncode
 
@@ -104,16 +107,50 @@ def safe_quote(value: str) -> str:
 
 
 # ---------------------------------------------------------------------------
+# System / environment helpers
+# ---------------------------------------------------------------------------
+
+def check_tool(name: str) -> bool:
+    """Return True if a CLI tool is available in PATH."""
+    return shutil.which(name) is not None
+
+
+def require_tool(name: str) -> bool:
+    """Warn and return False if a tool is not installed. Use before running commands."""
+    if not check_tool(name):
+        warn(
+            f"[bold]{name}[/bold] is not installed or not in PATH.\n"
+            f"  Use the install option in this menu, or install it manually."
+        )
+        return False
+    return True
+
+
+def detect_pkg_manager() -> str:
+    """Detect the available system package manager (apt, apt-get, dnf, yum)."""
+    for pm in ("apt", "apt-get", "dnf", "yum"):
+        if shutil.which(pm):
+            return pm
+    return "unknown"
+
+
+# ---------------------------------------------------------------------------
 # Auth
 # ---------------------------------------------------------------------------
 
 def check_root() -> None:
-    import os
-    if os.geteuid() != 0:
-        console.print(Panel(
-            "[bold red]Root privileges required.[/bold red]\n"
-            "Please re-run with [bold]sudo[/bold].",
-            border_style="red",
-            title="[red]Permission Denied[/red]",
-        ))
-        sys.exit(1)
+    """Exit with a clear message if not running as root. No-op on Windows."""
+    if detect_platform() == "Windows":
+        return  # Windows doesn't use the Unix sudo model
+    try:
+        import os
+        if os.geteuid() != 0:
+            console.print(Panel(
+                "[bold red]Root privileges required.[/bold red]\n"
+                "Please re-run with [bold]sudo[/bold].",
+                border_style="red",
+                title="[red]Permission Denied[/red]",
+            ))
+            sys.exit(1)
+    except AttributeError:
+        pass  # geteuid not available (e.g. some non-Unix environments)

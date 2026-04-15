@@ -2,7 +2,7 @@
 
 from tui.utils import (
     banner, clear_screen, error, get_choice, info, pause,
-    print_menu, run_cmd_safe, separator, success, warn,
+    print_menu, require_tool, run_cmd_safe, separator, success, warn,
 )
 
 
@@ -243,6 +243,7 @@ def _cloudfront_services() -> None:
             break
         else:
             error("Invalid choice.")
+        pause()
         clear_screen()
 
 
@@ -268,15 +269,20 @@ def run() -> None:
         if choice == 1:
             _install_cli()
         elif choice == 2:
-            run_cmd_safe(["aws", "--version"])
+            if require_tool("aws"):
+                run_cmd_safe(["aws", "--version"])
         elif choice == 3:
-            run_cmd_safe(["aws", "configure"])
+            if require_tool("aws"):
+                run_cmd_safe(["aws", "configure"])
         elif choice == 4:
-            _ec2_services()
+            if require_tool("aws"):
+                _ec2_services()
         elif choice == 5:
-            _s3_services()
+            if require_tool("aws"):
+                _s3_services()
         elif choice == 6:
-            _cloudfront_services()
+            if require_tool("aws"):
+                _cloudfront_services()
         elif choice == 7:
             break
         else:

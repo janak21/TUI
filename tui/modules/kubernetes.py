@@ -1,8 +1,10 @@
 """Kubernetes module — cluster management, deployments, services, and pods."""
 
+from platform import system as detect_platform
+
 from tui.utils import (
     banner, clear_screen, error, get_choice, info, pause,
-    print_menu, run_cmd_safe, separator, success, warn,
+    print_menu, require_tool, run_cmd_safe, separator, success, warn,
 )
 
 
@@ -28,9 +30,15 @@ def _setup_cluster() -> None:
             success("kubectl installed.")
         elif choice == 2:
             info("Installing Minikube...")
-            run_cmd_safe(["curl", "-LO",
-                "https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64"])
-            run_cmd_safe(["sudo", "install", "minikube-linux-amd64", "/usr/local/bin/minikube"])
+            os_name = detect_platform()
+            if os_name == "Darwin":
+                run_cmd_safe(["brew", "install", "minikube"])
+            elif os_name == "Windows":
+                run_cmd_safe(["choco", "install", "minikube", "-y"])
+            else:
+                run_cmd_safe(["curl", "-LO",
+                    "https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64"])
+                run_cmd_safe(["sudo", "install", "minikube-linux-amd64", "/usr/local/bin/minikube"])
             run_cmd_safe(["minikube", "version"])
             success("Minikube installed.")
         elif choice == 3:
@@ -501,23 +509,15 @@ def run() -> None:
         if choice == 1:
             _setup_cluster()
         elif choice == 2:
-            _minikube()
-        elif choice == 3:
-            _nodes()
-        elif choice == 4:
-            _namespaces()
-        elif choice == 5:
-            _deployments()
-        elif choice == 6:
-            _pods()
-        elif choice == 7:
-            _services()
-        elif choice == 8:
-            _config_secrets()
-        elif choice == 9:
-            _manifests()
+            if require_tool("minikube"):
+                _minikube()
+        elif choice in (3, 4, 5, 6, 7, 8, 9):
+            if require_tool("kubectl"):
+                {3: _nodes, 4: _namespaces, 5: _deployments,
+                 6: _pods, 7: _services, 8: _config_secrets, 9: _manifests}[choice]()
         elif choice == 10:
-            _helm()
+            if require_tool("helm"):
+                _helm()
         elif choice == 11:
             break
         else:
